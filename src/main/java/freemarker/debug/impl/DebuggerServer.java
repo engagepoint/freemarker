@@ -60,9 +60,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Random;
 
 import freemarker.debug.Debugger;
 import freemarker.log.Logger;
@@ -76,7 +77,7 @@ class DebuggerServer
 {
     private static final Logger logger = Logger.getLogger("freemarker.debug.server");
     // TODO: Eventually replace with Yarrow    
-    private static final Random R = new SecureRandom();
+    private static final SecureRandom R = initRandom();
     
     private final byte[] password;
     private final int port;
@@ -180,5 +181,19 @@ class DebuggerServer
                 logger.error("Unable to close server socket.", e);
             }
         }
+    }
+    
+    private static SecureRandom initRandom() {
+        SecureRandom r = null;
+        try {
+            r = SecureRandom.getInstance("SHA1PRNG", "SUN");
+        } catch (NoSuchAlgorithmException e) {
+            logger.warn("Unable to load SHA1PRNG algorim for SecureRandom. Use default instead", e);
+            r = new SecureRandom();
+        } catch (NoSuchProviderException e) {
+            logger.warn("Unable to load SUN provider for SecureRandom. Use default instead", e);
+            r = new SecureRandom();
+        }    
+        return r;
     }
 }
